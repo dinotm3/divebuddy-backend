@@ -1,7 +1,8 @@
 package algebra.mesaric.dt.data.model
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Table
 
 @Serializable
@@ -23,5 +24,4 @@ object Users : Table() {
     var lng = double("longitude")
 
     override val primaryKey = PrimaryKey(id)
-
 }

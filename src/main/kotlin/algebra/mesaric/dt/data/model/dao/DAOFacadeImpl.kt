@@ -19,7 +19,7 @@ class DAOFacadeImpl : DAOFacade {
         Users.selectAll().map (::resultRowToUser)
     }
 
-    override suspend fun user(id: Int): User? = dbQuery {
+    override suspend fun getUserById(id: Int): User? = dbQuery {
         Users
             .select { Users.id eq id }
             .map (::resultRowToUser)
@@ -50,3 +50,4 @@ class DAOFacadeImpl : DAOFacade {
         insertUser("Test name 5", "test1@gmail.com", "Croatia", 43.60937046452259, 15.93716396642017)
     }
 }
+

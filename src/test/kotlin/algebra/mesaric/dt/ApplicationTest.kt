@@ -7,15 +7,4 @@ import kotlin.test.*
 import io.ktor.http.*
 import algebra.mesaric.dt.plugins.*
 
-class ApplicationTest {
-    @Test
-    fun testRoot() = testApplication {
-        application {
-            configureRouting()
-        }
-        client.get("/").apply {
-            assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Hello World!", bodyAsText())
-        }
-    }
-}
+

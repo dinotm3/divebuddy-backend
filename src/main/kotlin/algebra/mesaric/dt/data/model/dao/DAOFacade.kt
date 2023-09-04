@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.ResultRow
 
 interface DAOFacade {
     suspend fun allUsers(): List<User>
-    suspend fun user(id: Int): User?
+    suspend fun getUserById(id: Int): User?
     suspend fun insertUser(name: String, email: String, country: String, lat: Double, lng: Double): User?
     suspend fun deleteAllUsers()
     suspend fun loadMockData()
