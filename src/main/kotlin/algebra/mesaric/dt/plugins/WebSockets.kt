@@ -15,6 +15,7 @@ fun Application.configureSockets() {
     }
     routing {
 
+        // I am using MutableList because each chat will have at least 2 users which means at least 2 websocket sessions
         val activeChatSessions = mutableMapOf<String, MutableList<DefaultWebSocketServerSession>>()
         val chatHistories = mutableMapOf<String, MutableList<String>>()
 
@@ -27,11 +28,10 @@ fun Application.configureSockets() {
                 val chatSession = checkChatExistence(chatId, activeChatSessions)
 
                 if (chatSession != null) {
-                    // Retrieve and send chat history if available
-                    val chatHistory = chatHistories[chatId]
-                    send("History: " + chatHistory.toString())
-                    send("Server: You are connected!")
 
+                    val chatHistory = chatHistories[chatId]
+                    send("Server: You are connected!")
+                    send("History: " + chatHistory.toString())
                     for (frame in incoming) {
                         frame as? Frame.Text ?: continue
                         val receivedText = frame.readText()
@@ -39,16 +39,11 @@ fun Application.configureSockets() {
                         chatHistory?.add("User: $receivedText")
                     }
                 }
+
                 if (chatSession == null) {
-                    // Create a new chat session
-                    val newChatSession = mutableListOf<DefaultWebSocketServerSession>()
 
-                    // Initialize chat history for the new chat session
-                    chatHistories[chatId] = mutableListOf()
-
-                    // Add the new chat session to the list of active sessions
-                    activeChatSessions[chatId] = newChatSession
-                    val chatHistory = chatHistories[chatId]
+                    addToActiveChatSessions(chatId, activeChatSessions, createNewChatSession())
+                    val chatHistory = createChatHistory(chatId, chatHistories)
                     send("Server: You are connected to a new chat!")
                     for (frame in incoming) {
                         frame as? Frame.Text ?: continue
@@ -63,6 +58,22 @@ fun Application.configureSockets() {
         }
     }
 }
+
+private fun addToActiveChatSessions(
+    chatId: String,
+    activeChatSessions: MutableMap<String, MutableList<DefaultWebSocketServerSession>>,
+    newChatSession: MutableList<DefaultWebSocketServerSession>
+): MutableList<DefaultWebSocketServerSession>?
+{
+    activeChatSessions[chatId] = newChatSession
+    return activeChatSessions[chatId]
+}
+
+private fun createChatHistory(chatId: String, chatHistories: MutableMap<String, MutableList<String>>): MutableList<String>? {
+    chatHistories[chatId] = mutableListOf()
+    return chatHistories[chatId]
+}
+
 private fun generateUniqueChatId(user1Id: String, user2Id: String): String {
     // Sort the user IDs to ensure consistent chat IDs regardless of the order
     val sortedUserIds = listOf(user1Id, user2Id).sorted()
@@ -75,11 +86,6 @@ private fun checkChatExistence(chatId: String, activeChatSessions: MutableMap<St
     return activeChatSessions[chatId]
 }
 
-private fun createNewChatSession(chatId: String, activeChatSessions: MutableMap<String, String>) {
-    // You can perform additional setup or initialization for the chat session here
-    // For example, store the chat session in a database for persistence
-
-
-    // Store the chat session in the map (in-memory example)
-    activeChatSessions[chatId] = "Chat session data, if needed"
+private fun createNewChatSession(): MutableList<DefaultWebSocketServerSession> {
+    return mutableListOf()
 }
