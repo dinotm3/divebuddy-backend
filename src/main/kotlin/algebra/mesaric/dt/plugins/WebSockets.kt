@@ -26,33 +26,38 @@ fun Application.configureSockets() {
             if (user1Id.isNotEmpty() && user2Id.isNotEmpty()) {
                 val chatId = generateUniqueChatId(user1Id, user2Id)
                 val chatSession = checkChatExistence(chatId, activeChatSessions)
-
                 if (chatSession != null) {
-
-                    val chatHistory = chatHistories[chatId]
-                    send("Server: You are connected!")
-                    send("History: " + chatHistory.toString())
-                    for (frame in incoming) {
-                        frame as? Frame.Text ?: continue
-                        val receivedText = frame.readText()
-                        send("User: $receivedText")
-                        chatHistory?.add("User: $receivedText")
+                    try {
+                        val chatHistory = chatHistories[chatId]
+                        send("Server: You are connected!")
+                        send("History: " + chatHistory.toString())
+                        for (frame in incoming) {
+                            frame as? Frame.Text ?: continue
+                            val receivedText = frame.readText()
+                            send("User: $receivedText")
+                            chatHistory?.add("User: $receivedText")
+                        }
+                    } catch (e: Exception) {
+                        call.application.log.error("WebSocket error: ${e.message}", e)
+                        close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Websocket error: ${e.message} - Closing connection"))
                     }
                 }
 
                 if (chatSession == null) {
-
-                    addToActiveChatSessions(chatId, activeChatSessions, createNewChatSession())
-                    val chatHistory = createChatHistory(chatId, chatHistories)
-                    send("Server: You are connected to a new chat!")
-                    for (frame in incoming) {
-                        frame as? Frame.Text ?: continue
-                        val receivedText = frame.readText()
-                        send("User: $receivedText")
-                        chatHistory?.add("User: $receivedText")
+                    try {
+                        addToActiveChatSessions(chatId, activeChatSessions, createNewChatSession())
+                        val chatHistory = createChatHistory(chatId, chatHistories)
+                        send("Server: You are connected to a new chat!")
+                        for (frame in incoming) {
+                            frame as? Frame.Text ?: continue
+                            val receivedText = frame.readText()
+                            send("User: $receivedText")
+                            chatHistory?.add("User: $receivedText")
+                        }
+                    } catch (e: Exception) {
+                        call.application.log.error("WebSocket error: ${e.message}", e)
+                        close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Websocket error: ${e.message} - Closing connection"))
                     }
-                } else {
-                    close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid parameters"))
                 }
             }
         }
@@ -63,13 +68,16 @@ private fun addToActiveChatSessions(
     chatId: String,
     activeChatSessions: MutableMap<String, MutableList<DefaultWebSocketServerSession>>,
     newChatSession: MutableList<DefaultWebSocketServerSession>
-): MutableList<DefaultWebSocketServerSession>?
-{
+): MutableList<DefaultWebSocketServerSession>? {
+
     activeChatSessions[chatId] = newChatSession
     return activeChatSessions[chatId]
 }
 
-private fun createChatHistory(chatId: String, chatHistories: MutableMap<String, MutableList<String>>): MutableList<String>? {
+private fun createChatHistory(
+    chatId: String,
+    chatHistories: MutableMap<String, MutableList<String>>
+): MutableList<String>? {
     chatHistories[chatId] = mutableListOf()
     return chatHistories[chatId]
 }
@@ -82,7 +90,10 @@ private fun generateUniqueChatId(user1Id: String, user2Id: String): String {
     return "${sortedUserIds[0]}_${sortedUserIds[1]}"
 }
 
-private fun checkChatExistence(chatId: String, activeChatSessions: MutableMap<String, MutableList<DefaultWebSocketServerSession>>): MutableList<DefaultWebSocketServerSession>? {
+private fun checkChatExistence(
+    chatId: String,
+    activeChatSessions: MutableMap<String, MutableList<DefaultWebSocketServerSession>>
+): MutableList<DefaultWebSocketServerSession>? {
     return activeChatSessions[chatId]
 }
 
