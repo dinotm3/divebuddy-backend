@@ -69,7 +69,6 @@ private fun addToActiveChatSessions(
     activeChatSessions: MutableMap<String, MutableList<DefaultWebSocketServerSession>>,
     newChatSession: MutableList<DefaultWebSocketServerSession>
 ): MutableList<DefaultWebSocketServerSession>? {
-
     activeChatSessions[chatId] = newChatSession
     return activeChatSessions[chatId]
 }
@@ -83,10 +82,7 @@ private fun createChatHistory(
 }
 
 private fun generateUniqueChatId(user1Id: String, user2Id: String): String {
-    // Sort the user IDs to ensure consistent chat IDs regardless of the order
     val sortedUserIds = listOf(user1Id, user2Id).sorted()
-
-    // Combine the sorted user IDs to create a unique chat ID
     return "${sortedUserIds[0]}_${sortedUserIds[1]}"
 }
 
