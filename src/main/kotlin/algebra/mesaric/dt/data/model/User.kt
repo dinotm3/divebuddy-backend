@@ -13,6 +13,7 @@ data class User(
     val country: String,
     var lat: Double,
     var lng: Double,
+    var depth: Int,
 )
 
 object Users : Table() {
@@ -22,6 +23,7 @@ object Users : Table() {
     val country = varchar("country", 125)
     var lat = double("latitude")
     var lng = double("longitude")
+    val depth = integer("depth")
 
     override val primaryKey = PrimaryKey(id)
 }
