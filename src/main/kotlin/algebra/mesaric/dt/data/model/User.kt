@@ -14,6 +14,8 @@ data class User(
     var lat: Double,
     var lng: Double,
     var depth: Int,
+    val password: String,
+    val salt: String
 )
 
 object Users : Table() {
@@ -24,6 +26,8 @@ object Users : Table() {
     var lat = double("latitude")
     var lng = double("longitude")
     val depth = integer("depth")
+    val password = varchar("password", 125)
+    val salt = varchar("salt", 125)
 
     override val primaryKey = PrimaryKey(id)
 }

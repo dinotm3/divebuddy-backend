@@ -3,6 +3,9 @@ package algebra.mesaric.dt
 import algebra.mesaric.dt.data.factory.DatabaseFactory
 import algebra.mesaric.dt.data.model.dao.DAOFacadeImpl
 import algebra.mesaric.dt.plugins.*
+import algebra.mesaric.dt.security.hashing.SHA256HashingService
+import algebra.mesaric.dt.security.token.JwtTokenService
+import algebra.mesaric.dt.security.token.TokenConfig
 import io.ktor.client.plugins.websocket.*
 import io.ktor.network.sockets.*
 import io.ktor.server.application.*
@@ -20,11 +23,21 @@ fun Application.module() {
     DatabaseFactory.init()
     // DB is initialized so I do not need supply anything to the function
     val db = DAOFacadeImpl()
+    val tokenService = JwtTokenService()
+    val tokenConfig = TokenConfig(
+        issuer = environment.config.property("jwt.issuer").getString(),
+        audience = environment.config.property("jwt.audience").getString(),
+        expiresIn = 365L * 1000L * 60L * 60L * 24L,
+        secret = System.getenv("JWT_SECRET")
+    )
+
+    val hashingService = SHA256HashingService()
+
     configureSockets()
-    configureSecurity()
+    configureSecurity(tokenConfig)
     configureHTTP()
     configureSerialization()
-    configureRouting(db)
+    configureRouting(db, hashingService, tokenService, tokenConfig)
 }
 
 

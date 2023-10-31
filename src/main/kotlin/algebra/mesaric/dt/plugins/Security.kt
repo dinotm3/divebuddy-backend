@@ -1,5 +1,6 @@
 package algebra.mesaric.dt.plugins
 
+import algebra.mesaric.dt.security.token.TokenConfig
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import com.auth0.jwt.JWT
@@ -12,90 +13,23 @@ import io.ktor.server.sessions.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-fun Application.configureSecurity() {
+fun Application.configureSecurity(config: TokenConfig) {
 
-    // Please read the jwt property from the config file if you are using EngineMain
-    val jwtAudience = "jwt-audience"
-    val jwtDomain = "https://jwt-provider-domain/"
-    val jwtRealm = "ktor sample app"
-    val jwtSecret = "secret"
     authentication {
         jwt {
-            realm = jwtRealm
+            realm = this@configureSecurity.environment.config.property("jwt.realm").getString()
             verifier(
                     JWT
-                            .require(Algorithm.HMAC256(jwtSecret))
-                            .withAudience(jwtAudience)
-                            .withIssuer(jwtDomain)
+                            .require(Algorithm.HMAC256(config.secret))
+                            .withAudience(config.audience)
+                            .withIssuer(config.issuer)
                             .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
-            }
-        }
-    }
-    authentication {
-        basic(name = "myauth1") {
-            realm = "Ktor Server"
-            validate { credentials ->
-                if (credentials.name == credentials.password) {
-                    UserIdPrincipal(credentials.name)
-                } else {
-                    null
-                }
-            }
-        }
-
-        form(name = "myauth2") {
-            userParamName = "user"
-            passwordParamName = "password"
-            challenge {
-                /**/
-            }
-        }
-    }
-    authentication {
-        oauth("auth-oauth-google") {
-            urlProvider = { "http://localhost:8080/callback" }
-            providerLookup = {
-                OAuthServerSettings.OAuth2ServerSettings(
-                        name = "google",
-                        authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-                        accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
-                        requestMethod = HttpMethod.Post,
-                        clientId = System.getenv("GOOGLE_CLIENT_ID"),
-                        clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
-                        defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
-                )
-            }
-            client = HttpClient(Apache)
-        }
-    }
-    routing {
-        authenticate("myauth1") {
-            get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
-            }
-        }
-        authenticate("myauth2") {
-            get("/protected/route/form") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
-            }
-        }
-        authenticate("auth-oauth-google") {
-            get("login") {
-                call.respondRedirect("/callback")
-            }
-
-            get("/callback") {
-                val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                call.sessions.set(UserSession(principal?.accessToken.toString()))
-                call.respondRedirect("/hello")
+                if (credential.payload.audience.contains(config.audience))
+                    JWTPrincipal(credential.payload) else null
             }
         }
     }
 }
 
-class UserSession(accessToken: String)

@@ -15,7 +15,6 @@ fun Application.configureSockets() {
     }
     routing {
 
-        // I am using MutableList because each chat will have at least 2 users which means at least 2 websocket sessions
         val activeChatSessions = mutableMapOf<String, MutableList<DefaultWebSocketServerSession>>()
         val chatHistories = mutableMapOf<String, MutableList<String>>()
 
